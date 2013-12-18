@@ -3,7 +3,7 @@ Twitter-Reverse-Auth
 
 Twitter Reverse Auth made easy with a single method!
 
-Open SecretKeys.h and add you Token and Token Secret
+Open SecretKeys.h and add your Token and Token Secret
 
 Simply include TwitterHelper.h and use the following method:
 
