@@ -29,8 +29,6 @@
 #import <Accounts/Accounts.h>
 #import "TwitterHelper.h"
 
-#define kTwitterApiRootURL [NSURL URLWithString:@"https://api.twitter.com/1.1/"]
-
 const struct TwitterCredentials TwitterCredentials = {
     .oauthToken = @"oauth_token",
     .oauthTokenSecret = @"oauth_token_secret",
@@ -44,29 +42,25 @@ const struct TwitterCredentials TwitterCredentials = {
     NSParameterAssert(completion);
     // Configure the URL
     NSURL *url = [NSURL URLWithString:@"https://api.twitter.com/"];
-   
-    
     
     // Create a client
     STLOAuthClient *client = [[STLOAuthClient alloc] initWithBaseURL:url consumerKey:kTwitterConsumerKey secret:kTwitterConsumerSecret];
     
     // Create other parameters
     NSDictionary *params = @{ @"x_auth_mode" : @"reverse_auth" };
-   
+    
     //This get request is for the request_tokens.
     [client getPath:@"oauth/request_token" parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
-        
         // Get the oauth response
-    
         NSString *oauth = operation.responseString;
-
+        
         NSString *S = oauth;
         NSDictionary *step2Params = [[NSMutableDictionary alloc] init];
-        [step2Params setValue:@"gvLIs3hfrKm2a6p2fgWujw" forKey:@"x_reverse_auth_target"];
+        [step2Params setValue:kTwitterConsumerKey forKey:@"x_reverse_auth_target"];
         [step2Params setValue:S forKey:@"x_reverse_auth_parameters"];
         
         NSURL *url2 = [NSURL URLWithString:@"https://api.twitter.com/oauth/access_token"];
-//        Following two lines perform the access token request directly with iOS 6 Social Framework SLRequest
+        //        Following two lines perform the access token request directly with iOS 6 Social Framework SLRequest
         SLRequest *stepTwoRequest = [SLRequest requestForServiceType:SLServiceTypeTwitter requestMethod:SLRequestMethodPOST URL:url2 parameters:step2Params];
         // Create a request  - following is some suggested iOS 5 code to accomplish the request thought it's really calling mapped SLRequest calls.
         //TWRequest *stepTwoRequest = [[TWRequest alloc] initWithURL:url2 parameters:step2Params requestMethod:TWRequestMethodPOST];
@@ -76,57 +70,48 @@ const struct TwitterCredentials TwitterCredentials = {
         
         // Perform the request
         [stepTwoRequest performRequestWithHandler:^(NSData *responseData, NSHTTPURLResponse *urlResponse, NSError *error) {
-        
-        //  You *MUST* keep the ACAccountStore alive for as long as you need an ACAccount instance
-        //  See WWDC 2011 Session 124 for more info.
-        ACAccountStore *accountStore = [[ACAccountStore alloc] init];
-        
-        //  We only want to receive Twitter accounts
-        ACAccountType *twitterType =
-        [accountStore accountTypeWithAccountTypeIdentifier:ACAccountTypeIdentifierTwitter];
-        
-        //  Obtain the user's permission to access the store
-        [accountStore requestAccessToAccountsWithType:twitterType
-                                     withCompletionHandler:^(BOOL granted, NSError *error) {
-             if (!granted) {
-                 // handle this scenario gracefully
-             } else {
-                 // obtain all the local account instances
-                 NSArray *accounts =
-                 [accountStore accountsWithAccountType:twitterType];
-                 
-                 // for simplicity, we will choose the first account returned - in your app,
-                 // you should ensure that the user chooses the correct Twitter account
-                 // to use with your application.  DO NOT FORGET THIS STEP.
-                 [stepTwoRequest setAccount:[accounts objectAtIndex:0]];
-                 
-                 // execute the request
-                 [stepTwoRequest performRequestWithHandler:
-                  ^(NSData *responseData, NSHTTPURLResponse *urlResponse, NSError *error) {
-                      NSString *responseStr = 
-                      [[NSString alloc] initWithData:responseData 
-                                            encoding:NSUTF8StringEncoding];
-                      
-                      // see below for an example response
-                      //NSLog(@"The user's info for your server:\n%@", responseStr);
-                      // Check for errors
-                      if (responseData && !error) {
-                          completion([TwitterHelper credentialsFromTwitterOAuthResponse:responseStr], nil);
-                      } else {
-                        completion(nil, error);
-                      }
-                  }];
-            }
-
-         }];
+            //  You *MUST* keep the ACAccountStore alive for as long as you need an ACAccount instance
+            //  See WWDC 2011 Session 124 for more info.
+            ACAccountStore *accountStore = [[ACAccountStore alloc] init];
+            
+            //  We only want to receive Twitter accounts
+            ACAccountType *twitterType =
+            [accountStore accountTypeWithAccountTypeIdentifier:ACAccountTypeIdentifierTwitter];
+            
+            //  Obtain the user's permission to access the store
+            [accountStore requestAccessToAccountsWithType:twitterType
+                                    withCompletionHandler:^(BOOL granted, NSError *error) {
+                                        if (!granted) {
+                                            completion(nil, error);
+                                        } else {
+                                            [stepTwoRequest setAccount:[accountStore accountWithIdentifier:account.identifier]];
+                                            
+                                            // execute the request
+                                            [stepTwoRequest performRequestWithHandler:
+                                             ^(NSData *responseData, NSHTTPURLResponse *urlResponse, NSError *error) {
+                                                 NSString *responseStr =
+                                                 [[NSString alloc] initWithData:responseData
+                                                                       encoding:NSUTF8StringEncoding];
+                                                 
+                                                 // see below for an example response
+                                                 //NSLog(@"The user's info for your server:\n%@", responseStr);
+                                                 // Check for errors
+                                                 if (responseData && !error) {
+                                                     completion([TwitterHelper credentialsFromTwitterOAuthResponse:responseStr], nil);
+                                                 } else {
+                                                     completion(nil, error);
+                                                 }
+                                             }];
+                                        }
+                                        
+                                    }];
         }];
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         completion(nil, error);
-        }];
+    }];
 }
 
 + (NSDictionary *)credentialsFromTwitterOAuthResponse:(NSString *)response {
-    
     // Divide the string by ampersands
     NSArray *components = [response componentsSeparatedByString:@"&"];
     

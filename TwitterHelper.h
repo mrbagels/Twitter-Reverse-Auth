@@ -21,6 +21,7 @@
 // THE SOFTWARE.
 
 #import <Foundation/Foundation.h>
+
 #import <Accounts/ACAccountStore.h>
 #import <Accounts/ACAccount.h>
 
@@ -31,12 +32,9 @@ extern const struct TwitterCredentials {
     __unsafe_unretained NSString *screenName;
 } TwitterCredentials;
 
-
 @interface TwitterHelper : NSObject
-//@property (nonatomic,retain) ACAccountStore *accountStore;
 
 + (void)getCredentialsForAccount:(ACAccount *)account
                       completion:(void(^)(NSDictionary *credentials, NSError *error))completion;
-
 
 @end
