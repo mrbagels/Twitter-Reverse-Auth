@@ -86,8 +86,7 @@ const struct TwitterCredentials TwitterCredentials = {
         [accountStore accountTypeWithAccountTypeIdentifier:ACAccountTypeIdentifierTwitter];
         
         //  Obtain the user's permission to access the store
-        [accountStore requestAccessToAccountsWithType:twitterType
-                                     withCompletionHandler:^(BOOL granted, NSError *error) {
+            [accountStore requestAccessToAccountsWithType:twitterType options:nil completion:^(BOOL granted, NSError *error) {
              if (!granted) {
                  // handle this scenario gracefully
              } else {
