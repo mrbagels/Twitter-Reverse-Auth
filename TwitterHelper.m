@@ -62,7 +62,7 @@ const struct TwitterCredentials TwitterCredentials = {
 
         NSString *S = oauth;
         NSDictionary *step2Params = [[NSMutableDictionary alloc] init];
-        [step2Params setValue:@"gvLIs3hfrKm2a6p2fgWujw" forKey:@"x_reverse_auth_target"];
+        [step2Params setValue:kTwitterConsumerKey forKey:@"x_reverse_auth_target"];
         [step2Params setValue:S forKey:@"x_reverse_auth_parameters"];
         
         NSURL *url2 = [NSURL URLWithString:@"https://api.twitter.com/oauth/access_token"];
@@ -86,8 +86,7 @@ const struct TwitterCredentials TwitterCredentials = {
         [accountStore accountTypeWithAccountTypeIdentifier:ACAccountTypeIdentifierTwitter];
         
         //  Obtain the user's permission to access the store
-        [accountStore requestAccessToAccountsWithType:twitterType
-                                     withCompletionHandler:^(BOOL granted, NSError *error) {
+            [accountStore requestAccessToAccountsWithType:twitterType options:nil completion:^(BOOL granted, NSError *error) {
              if (!granted) {
                  // handle this scenario gracefully
              } else {
